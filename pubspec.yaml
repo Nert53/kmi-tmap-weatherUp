@@ -1,0 +1,25 @@
+name: weather
+description: "Weather app for KM/TMAP on UPOL."
+publish_to: 'none'
+version: 0.1.0
+
+environment:
+  sdk: '>=3.3.1 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  http: ^1.2.1
+  flutter_native_splash: ^2.4.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^3.0.0
+
+flutter:
+  uses-material-design: true
+
+flutter_native_splash:
+  color: "#0066a8"
+  background_image: "assets/splash_icon.png"
