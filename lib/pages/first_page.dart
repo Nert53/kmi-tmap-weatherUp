@@ -40,6 +40,15 @@ class _FirstPageState extends State<FirstPage> {
         backgroundColor: Theme.of(context).colorScheme.primary,
       ),
       body: _pages[_selectedIndex],
+      floatingActionButton: _pages[_selectedIndex] is MyCitiesPage
+          ? FloatingActionButton(
+              onPressed: () {},
+              backgroundColor: Theme.of(context).colorScheme.primary,
+              foregroundColor: Theme.of(context).colorScheme.onPrimary,
+              child: const Icon(Icons.add),
+              
+            )
+          : null,
       bottomNavigationBar: BottomNavigationBar(
         type: BottomNavigationBarType.fixed,
         currentIndex: _selectedIndex,

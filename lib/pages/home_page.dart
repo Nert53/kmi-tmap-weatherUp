@@ -1,7 +1,8 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
 import 'package:weather/dataApi/test_api.dart';
+import 'package:weather/model/current_weather.dart';
+import 'package:weather/ui/colors.dart';
+import 'package:community_charts_flutter/community_charts_flutter.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -13,16 +14,26 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   final TextEditingController _searchController = TextEditingController();
 
-  String _searchCity = '';
+  CurrentWeather? _currentWeather = CurrentWeather(
+      temperature: 0,
+      temperatureMax: 0,
+      temperatureMin: 0,
+      weatherText: "none",
+      rain: 0,
+      uvIndex: 1,
+      airQualityIndex: 1,
+      pressure: 0,
+      sunrise: DateTime.now(),
+      sunset: DateTime.now());
 
   void _searchCityWeather() async {
-    int cityCode = await fetchCityCode(_searchController.text);
-    var currentWeather = await fetchCurrentWeather(cityCode);
+    final (longtitude, latitude) =
+        await fetchCityCoordinates(_searchController.text);
+    CurrentWeather weather =
+        await fetchCurrentCityWeather(longtitude, latitude);
 
     setState(() {
-      print(currentWeather.weatherText);
-      print("test priontu");
-      _searchCity = "testinnng";
+      _currentWeather = weather;
     });
   }
 
@@ -42,72 +53,80 @@ class _HomePageState extends State<HomePage> {
                 borderRadius: BorderRadius.all(Radius.circular(16.0))),
           ),
         ),
-        Text(_searchCity),
+        const SizedBox(height: 12.0),
+        Container(
+            height: 200,
+            decoration: const BoxDecoration(
+              color: Colors.blueGrey,
+              borderRadius: BorderRadius.all(Radius.circular(16.0)),
+            ),
+            child: Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(Icons.cloud, size: 48.0),
+                  Text(_currentWeather!.temperature.toString() + ' °C'),
+                  Text(_currentWeather!.temperatureMax.toString() + ' °C'),
+                  Text(_currentWeather!.weatherText)
+                ],
+              ),
+            )),
+        const SizedBox(height: 12.0),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceAround,
+          children: [
+            Expanded(
+              child: Container(
+                height: 150,
+                color: containerBackground,
+                child: Center(
+                  child: Text(_currentWeather!.rain.toString() + ' mm'),
+                ),
+              ),
+            ),
+            const SizedBox(width: 12.0),
+            Expanded(
+              child: Container(
+                  height: 150,
+                  color: containerBackground,
+                  child: Center(
+                    child: Text(_currentWeather!.uvIndex.toString()),
+                  )),
+            ),
+          ],
+        ),
+        const SizedBox(height: 12.0),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceAround,
+          children: [
+            Expanded(
+              child: Container(
+                height: 150,
+                color: containerBackground,
+                child: Center(
+                  child: Text(_currentWeather!.airQualityIndex.toString()),
+                ),
+              ),
+            ),
+            const SizedBox(width: 12.0),
+            Expanded(
+              child: Container(
+                height: 150,
+                color: containerBackground,
+                child: Center(
+                  child: Text(_currentWeather!.pressure.toString() + ' hPa'),
+                ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 12.0),
         Container(
           height: 200,
-          decoration: const BoxDecoration(
-            color: Colors.blueGrey,
-            borderRadius: BorderRadius.all(Radius.circular(16.0)),
+          color: containerBackground,
+          child: Center(
+            child: Text("sunrise and sunset"),
           ),
-          child: const Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(Icons.cloud, size: 48.0),
-                Text('Temperature'),
-                Text('high = low'),
-                Text("weaather descipriton")
-              ],
-            ),
-          )
-        ),
-        const SizedBox(height: 12.0),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceAround,
-          children: [
-            Expanded(
-              child: Container(
-                height: 150,
-                color: Colors.blueGrey,
-                child: Center(child: Text("rain"),),
-              ),
-            ),
-            const SizedBox(width: 12.0),
-            Expanded(
-              child: Container(
-                height: 150,
-                color: Colors.blueGrey,
-                child: Center(child: Text("uv index"),)
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 12.0),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceAround,
-          children: [
-            Expanded(
-              child: Container(
-                height: 150,
-                color: Colors.blueGrey,
-                child: Center(child: Text("air quality"),),
-              ),
-            ),
-            const SizedBox(width: 12.0),
-            Expanded(
-              child: Container(
-                height: 150,
-                color: Colors.blueGrey,
-                child: Center(child: Text("pressure"),),
-              ),
-            ),
-          ],
-        ),
-         const SizedBox(height: 12.0),
-        Container(
-          height: 200,
-          color: Colors.blueGrey,
-          child: Center(child: Text("sunrise and sunset"),),
         ),
       ],
     );
