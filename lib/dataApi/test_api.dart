@@ -31,6 +31,22 @@ Future<(double, double)> fetchCityCoordinates(String city) async {
   return (cityLongitude, cityLatitude);
 }
 
+Future<String> fetchCountryOfCity(String city) async {
+  String editedCity = city.trim();
+  int countOfCities = 1;
+  var apiUrl =
+      'https://geocoding-api.open-meteo.com/v1/search?name=$editedCity&count=$countOfCities';
+  var result = await http.get(Uri.parse(apiUrl));
+
+  if (result.statusCode != 200) {
+    return "none";
+  }
+  var jsonResult = jsonDecode(result.body)["results"][0];
+
+  String country = jsonResult['country_code'];
+  return country;
+}
+
 Future<CurrentWeather> fetchCurrentCityWeather(
     double longtitude, double latitude) async {
   String temperatureUnit = 'celsius';

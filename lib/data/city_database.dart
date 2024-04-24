@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:weather/model/city.dart';
+import 'package:shortuid/shortuid.dart';
 
 class CityDatabase {
   static final CityDatabase instance = CityDatabase._init();
@@ -24,9 +25,8 @@ class CityDatabase {
   }
 
   Future _createDB(Database db, int version) async {
-    const idType = 'INTEGER PRIMARY KEY AUTOINCREMENT';
+    const idType = 'TEXT PRIMARY KEY';
     const textType = 'TEXT NOT NULL';
-    const integerType = 'INTEGER NOT NULL';
     const doubleType = 'REAL NOT NULL';
 
     await db.execute('''
@@ -34,11 +34,29 @@ class CityDatabase {
         ${CityFields.id} $idType, 
         ${CityFields.name} $textType,
         ${CityFields.country} $textType,
-        ${CityFields.cityCode} $integerType,
         ${CityFields.latitude} $doubleType,
         ${CityFields.longitude} $doubleType
         )
       ''');
+
+    addCity(City(
+        id: ShortUid.create(),
+        name: 'London',
+        country: 'UK',
+        latitude: 51.5074,
+        longitude: 0.1278));
+    addCity(City(
+        id: ShortUid.create(),
+        name: 'Paris',
+        country: 'France',
+        latitude: 48.8566,
+        longitude: 2.3522));
+    addCity(City(
+        id: ShortUid.create(),
+        name: 'Berlin',
+        country: 'Germany',
+        latitude: 52.5200,
+        longitude: 13.4050));
   }
 
   Future close() async {
@@ -46,11 +64,14 @@ class CityDatabase {
     db.close();
   }
 
-  Future<City> addCity(City city) async {
+  Future<bool> addCity(City city) async {
     final db = await instance.db;
 
     final id = await db.insert(tableCity, city.toJson());
-    return city.copy(id: id);
+    if (id != 0) {
+      return true;
+    }
+    return false;
   }
 
   Future<City> getCity(int id) async {

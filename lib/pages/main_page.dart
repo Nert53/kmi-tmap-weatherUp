@@ -1,4 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:shortuid/shortuid.dart';
+import 'package:weather/data/city_database.dart';
+import 'package:weather/dataApi/test_api.dart';
+import 'package:weather/model/city.dart';
 import 'package:weather/pages/forecast_page.dart';
 import 'package:weather/pages/settings_page.dart';
 import 'package:weather/pages/home_page.dart';
@@ -13,6 +17,7 @@ class FirstPage extends StatefulWidget {
 
 class _FirstPageState extends State<FirstPage> {
   int _selectedIndex = 0;
+  final chooseCityController = TextEditingController();
 
   void _navigateToPage(int index) {
     setState(() {
@@ -42,11 +47,13 @@ class _FirstPageState extends State<FirstPage> {
       body: _pages[_selectedIndex],
       floatingActionButton: _pages[_selectedIndex] is MyCitiesPage
           ? FloatingActionButton(
-              onPressed: () {},
+              onPressed: () {
+                openChooseCityDialog(context);
+              },
+              tooltip: 'Add City',
               backgroundColor: Theme.of(context).colorScheme.primary,
               foregroundColor: Theme.of(context).colorScheme.onPrimary,
               child: const Icon(Icons.add),
-              
             )
           : null,
       bottomNavigationBar: BottomNavigationBar(
@@ -73,5 +80,41 @@ class _FirstPageState extends State<FirstPage> {
         ],
       ),
     );
+  }
+
+  void openChooseCityDialog(context) => showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+            title: const Text('Choose a city'),
+            content: TextField(
+              controller: chooseCityController,
+              autofocus: true,
+              decoration: const InputDecoration(
+                hintText: 'City name',
+              ),
+            ),
+            actions: [
+              TextButton(
+                  onPressed: () {
+                    addCity(chooseCityController.text);
+                    var cities = CityDatabase.instance.getAllCities();
+                    Navigator.of(context).pop();
+                  },
+                  child: const Text('Add'))
+            ],
+          ));
+
+  void addCity(String cityName) async {
+    final (longtitude, latitude) = await fetchCityCoordinates(cityName);
+    final country = await fetchCountryOfCity(cityName);
+
+    City newCity = City(
+        id: ShortUid.create(),
+        name: cityName,
+        country: country,
+        latitude: latitude,
+        longitude: longtitude);
+
+    await CityDatabase.instance.addCity(newCity);
   }
 }
