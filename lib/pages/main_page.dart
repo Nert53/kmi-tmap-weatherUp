@@ -97,7 +97,7 @@ class _FirstPageState extends State<FirstPage> {
               TextButton(
                   onPressed: () {
                     addCity(chooseCityController.text);
-                    var cities = CityDatabase.instance.getAllCities();
+                    // var cities = CityDatabase.instance.getAllCities();
                     Navigator.of(context).pop();
                   },
                   child: const Text('Add'))

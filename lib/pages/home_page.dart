@@ -1,8 +1,12 @@
+// ignore_for_file: deprecated_member_use
+
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:weather/dataApi/test_api.dart';
 import 'package:weather/model/current_weather.dart';
 import 'package:weather/ui/colors.dart';
+import 'package:step_progress_indicator/step_progress_indicator.dart';
+import 'package:intl/intl.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -23,8 +27,10 @@ class _HomePageState extends State<HomePage> {
       uvIndex: 1,
       airQualityIndex: 1,
       pressure: 0,
-      sunrise: DateTime.now(),
-      sunset: DateTime.now());
+      sunrise: DateTime(
+          DateTime.now().year, DateTime.now().month, DateTime.now().day, 6, 30),
+      sunset: DateTime(DateTime.now().year, DateTime.now().month,
+          DateTime.now().day, 18, 30));
 
   void _searchCityWeather() async {
     final (longtitude, latitude) =
@@ -102,8 +108,8 @@ class _HomePageState extends State<HomePage> {
                   ),
                 ],
               ),
-              child: smallContainerWdiget(
-                  'Rain [mm]', _currentWeather!.rain.toString()),
+              child: smallContainerWdigetDecimal(
+                  'Rain [mm]', _currentWeather!.rain, 10),
             ),
           ),
           const SizedBox(width: 12.0),
@@ -122,8 +128,8 @@ class _HomePageState extends State<HomePage> {
                   ),
                 ],
               ),
-              child: smallContainerWdiget('UV index [0-11]',
-                  _currentWeather!.uvIndex.round().toString()),
+              child: smallContainerWidgetWhole(
+                  'UV index [0-11]', _currentWeather!.uvIndex.round(), 11),
             ),
           ),
         ]),
@@ -146,8 +152,8 @@ class _HomePageState extends State<HomePage> {
                     ),
                   ],
                 ),
-                child: smallContainerWdiget('Air Quality [0-100]',
-                    _currentWeather!.airQualityIndex.toString()),
+                child: smallContainerWidgetWhole('Air Quality [0-100]',
+                    _currentWeather!.airQualityIndex, 100),
               ),
             ),
             const SizedBox(width: 12.0),
@@ -166,14 +172,15 @@ class _HomePageState extends State<HomePage> {
                       ),
                     ],
                   ),
-                  child: smallContainerWdiget(
-                      'Pressure [hPa]', _currentWeather!.pressure.toString())),
+                  child: smallContainerWdigetDecimal(
+                      'Pressure [hPa]', _currentWeather!.pressure, 1300)),
             ),
           ],
         ),
         const SizedBox(height: 12.0),
         Container(
           height: 200,
+          padding: EdgeInsets.all(16.0),
           decoration: const BoxDecoration(
             color: containerBackground,
             borderRadius: BorderRadius.all(Radius.circular(16.0)),
@@ -185,37 +192,66 @@ class _HomePageState extends State<HomePage> {
               ),
             ],
           ),
-          child: Center(
-            child: Text("sunrise and sunset"),
-          ),
+          child: sunsetSunriseWidget(
+              _currentWeather!.sunrise, _currentWeather!.sunset),
         ),
       ],
     );
   }
 
-  smallContainerWdiget(String title, String value) {
-    return Row(
-      children: [
-        Column(
-          mainAxisAlignment: MainAxisAlignment.start,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              title,
-              style: TextStyle(
-                  fontSize: 14.0,
-                  fontWeight: FontWeight.bold,
-                  color: Theme.of(context).colorScheme.primary),
-            ),
-            const SizedBox(height: 12.0),
-            Text(
-              value,
-              style: const TextStyle(fontSize: 24.0),
-            ),
-          ],
-        ),
-      ],
-    );
+  smallContainerWdigetDecimal(String title, double value, double totalValue) {
+    return Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
+      Column(
+        mainAxisAlignment: MainAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            title,
+            style: TextStyle(
+                fontSize: 14.0,
+                fontWeight: FontWeight.bold,
+                color: Theme.of(context).colorScheme.primary),
+          ),
+          const SizedBox(height: 12.0),
+          Text(
+            value.toString(),
+            style: const TextStyle(fontSize: 24.0),
+          ),
+        ],
+      ),
+      roundValueIndicator(value, totalValue),
+    ]);
+  }
+
+  smallContainerWidgetWhole(String title, int value, int totalValue) {
+    var selectedColor;
+    if (totalValue == 11) {
+      selectedColor = uvIndexColor(value);
+    } else {
+      selectedColor = airQualityIndexColor(value);
+    }
+
+    return Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
+      Column(
+        mainAxisAlignment: MainAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            title,
+            style: TextStyle(
+                fontSize: 14.0,
+                fontWeight: FontWeight.bold,
+                color: Theme.of(context).colorScheme.primary),
+          ),
+          const SizedBox(height: 12.0),
+          Text(
+            value.toString(),
+            style: const TextStyle(fontSize: 24.0),
+          ),
+        ],
+      ),
+      straightValueIndicator(value, totalValue, selectedColor),
+    ]);
   }
 
   mainContainerWidget(
@@ -263,5 +299,118 @@ class _HomePageState extends State<HomePage> {
         ),
       ],
     );
+  }
+
+  roundValueIndicator(double value, double totalValue) {
+    return CircularStepProgressIndicator(
+      totalSteps: totalValue.round(),
+      roundedCap: (_, __) => true,
+      currentStep: value.round(),
+      stepSize: 8,
+      selectedStepSize: 8,
+      selectedColor: Theme.of(context).colorScheme.primary,
+      unselectedColor: Colors.grey[200],
+      padding: 0,
+      width: 60,
+      height: 60,
+    );
+  }
+
+  straightValueIndicator(int value, int totalValue, Color selectedColor) {
+    return Transform.flip(
+        flipY: true,
+        child: StepProgressIndicator(
+          totalSteps: totalValue,
+          currentStep: value,
+          size: 20,
+          selectedSize: 20,
+          selectedColor: selectedColor,
+          roundedEdges: const Radius.circular(10),
+          unselectedColor: Colors.grey[200]!,
+          padding: 0,
+          direction: Axis.vertical,
+        ));
+  }
+
+  sunsetSunriseWidget(DateTime sunrise, DateTime sunset) {
+    DateTime currentTime = DateTime.now();
+    Duration daylightDurationMinutes = sunset.difference(sunrise);
+    Duration timePastSunriseMinutes = currentTime.difference(sunrise);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Sunrise and Sunset',
+          style: TextStyle(
+              fontSize: 14.0,
+              fontWeight: FontWeight.bold,
+              color: Theme.of(context).colorScheme.primary),
+        ),
+        const SizedBox(height: 40.0),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(DateFormat.Hm().format(sunrise)),
+            Text(DateFormat.Hm().format(sunset)),
+          ],
+        ),
+        const SizedBox(height: 8.0),
+        StepProgressIndicator(
+          totalSteps: daylightDurationMinutes.inMinutes,
+          currentStep: timePastSunriseMinutes.inMinutes,
+          size: 20,
+          selectedSize: 20,
+          selectedColor: Theme.of(context).colorScheme.primary,
+          roundedEdges: const Radius.circular(10),
+          unselectedColor: Colors.grey[200]!,
+          padding: 0,
+        ),
+        const SizedBox(height: 12.0),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            SvgPicture.asset(
+              'assets/sunrise_icon.svg',
+              color: Colors.orange[300],
+            ),
+            SvgPicture.asset(
+              'assets/sunset_icon.svg',
+              color: Colors.orange[900],
+            ),
+          ],
+        )
+      ],
+    );
+  }
+}
+
+airQualityIndexColor(int value) {
+  switch (value) {
+    case < 26:
+      return Colors.green;
+    case < 51:
+      return const Color.fromARGB(255, 172, 235, 0);
+    case < 76:
+      return Colors.yellow;
+    case < 101:
+      return Colors.orange;
+    default:
+      return Colors.red;
+  }
+}
+
+uvIndexColor(int value) {
+  switch (value) {
+    case < 3:
+      return Colors.green;
+    case < 6:
+      return Colors.yellow;
+    case < 8:
+      return Colors.orange;
+    case < 11:
+      return Colors.red;
+    default:
+      return Colors.purple;
   }
 }

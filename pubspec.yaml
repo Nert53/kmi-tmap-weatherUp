@@ -17,6 +17,8 @@ dependencies:
   shortuid: ^1.0.0
   uuid: ^3.0.7
   rename_app: ^1.3.2
+  step_progress_indicator: ^1.0.2
+  flutter_svg: ^2.0.10+1
 
 dev_dependencies:
   flutter_test:
@@ -28,6 +30,8 @@ flutter:
   uses-material-design: true
   assets:
     - assets/wmo_codes_descriptions.json
+    - assets/sunset_icon.svg
+    - assets/sunrise_icon.svg
 
 flutter_native_splash:
   color: "#006FAD"
