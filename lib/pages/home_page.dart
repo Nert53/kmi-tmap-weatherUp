@@ -1,13 +1,18 @@
 // ignore_for_file: deprecated_member_use
 
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:location/location.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:weather/constants.dart';
 import 'package:weather/dataApi/external_api.dart';
 import 'package:weather/model/current_weather.dart';
 import 'package:weather/ui/colors.dart';
 import 'package:step_progress_indicator/step_progress_indicator.dart';
 import 'package:intl/intl.dart';
+import 'package:weather_icons/weather_icons.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -18,8 +23,7 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   final TextEditingController _searchController = TextEditingController();
-
-  CurrentWeather? _currentWeather = CurrentWeather(
+  late CurrentWeather _currentWeather = CurrentWeather(
       city: '',
       temperature: 0,
       temperatureMax: 0,
@@ -33,6 +37,42 @@ class _HomePageState extends State<HomePage> {
           DateTime.now().year, DateTime.now().month, DateTime.now().day, 6, 30),
       sunset: DateTime(DateTime.now().year, DateTime.now().month,
           DateTime.now().day, 18, 30));
+  Random random = Random();
+
+  @override
+  void initState() {
+    _loadCity();
+    super.initState();
+  }
+
+  _loadCity() async {
+    var prefs = await SharedPreferences.getInstance();
+    var city = prefs.getString('currentCity') ?? '';
+
+    if (city.isEmpty) {
+      setState(() {
+        _currentWeather = CurrentWeather(
+            city: '',
+            temperature: 0,
+            temperatureMax: 0,
+            temperatureMin: 0,
+            weatherText: "none",
+            rain: 0,
+            uvIndex: 1,
+            airQualityIndex: 1,
+            pressure: 0,
+            sunrise: DateTime(DateTime.now().year, DateTime.now().month,
+                DateTime.now().day, 6, 30),
+            sunset: DateTime(DateTime.now().year, DateTime.now().month,
+                DateTime.now().day, 18, 30));
+
+        _searchController.text = _currentWeather.city;
+      });
+    } else {
+      _searchController.text = city;
+      _searchCityWeather();
+    }
+  }
 
   void _searchCityWeather() async {
     final (longtitude, latitude, city, country) =
@@ -43,7 +83,13 @@ class _HomePageState extends State<HomePage> {
     setState(() {
       _currentWeather = weather;
       _searchController.text = city;
+      saveToPrefs(city);
     });
+  }
+
+  void saveToPrefs(String city) async {
+    var prefs = await SharedPreferences.getInstance();
+    prefs.setString('currentCity', city);
   }
 
   void _searchCurrentCityWeather() async {
@@ -68,16 +114,15 @@ class _HomePageState extends State<HomePage> {
     }
 
     var locationData = await location.getLocation();
-    CurrentWeather weather =
-        await fetchCurrentCityWeather(locationData.longitude!, locationData.latitude!);
+    CurrentWeather weather = await fetchCurrentCityWeather(
+        locationData.longitude!, locationData.latitude!);
 
     setState(() {
       _currentWeather = weather;
       _searchController.text = weather.city;
+      saveToPrefs(weather.city);
     });
   }
-
-  var decoratedContainer = Container();
 
   @override
   Widget build(BuildContext context) {
@@ -343,7 +388,7 @@ class _HomePageState extends State<HomePage> {
           ],
         ),
         Icon(
-          Icons.wb_sunny_outlined,
+          WEATHER_ICONS[random.nextInt(WEATHER_ICONS.length)],
           size: 64.0,
           color: Theme.of(context).colorScheme.primary,
         ),
@@ -428,13 +473,15 @@ class _HomePageState extends State<HomePage> {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            SvgPicture.asset(
-              'assets/sunrise_icon.svg',
+            Icon(
+              WeatherIcons.sunrise,
               color: Colors.orange[300],
+              size: 20,
             ),
-            SvgPicture.asset(
-              'assets/sunset_icon.svg',
+            Icon(
+              WeatherIcons.sunset,
               color: Colors.orange[900],
+              size: 20,
             ),
           ],
         )

@@ -48,13 +48,13 @@ class CityDatabase {
     addCity(City(
         id: ShortUid.create(),
         name: 'Paris',
-        country: 'France',
+        country: 'FR',
         latitude: 48.8566,
         longitude: 2.3522));
     addCity(City(
         id: ShortUid.create(),
         name: 'Berlin',
-        country: 'Germany',
+        country: 'DE',
         latitude: 52.5200,
         longitude: 13.4050));
   }

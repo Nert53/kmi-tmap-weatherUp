@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
-import 'package:weather/dataApi/api_keys.dart';
+import 'package:weather/constants.dart';
 import 'package:weather/model/city.dart';
 import 'package:weather/model/current_weather.dart';
 
@@ -30,7 +30,7 @@ Future<(String, String, String)> fetchCityOfCoordinates(
   final queryParams = {
     'lat': latitude.toString(),
     'lon': longtitude.toString(),
-    'api_key': geocodeMapsApiKey,
+    'api_key': GEOCODE_MAPS_KEY,
   };
   final httpsUri = Uri.https('geocode.maps.co', '/reverse', queryParams);
 
@@ -88,7 +88,8 @@ Future<CurrentWeather> fetchCurrentCityWeather(
   var weatherText =
       await convertWeatherCodeToText(jsonResult['current']['weather_code']);
   var airQualityIndex = await fetchCityAirQualityIndex(longtitude, latitude);
-  var (cityName, county, countyCode) = await fetchCityOfCoordinates(longtitude, latitude);
+  var (cityName, county, countyCode) =
+      await fetchCityOfCoordinates(longtitude, latitude);
 
   return CurrentWeather(
       city: cityName,
@@ -162,4 +163,61 @@ Future<List<Map>> fetchMultipleCitiesWeather(List<City> cities) async {
     return citiesWeather;
   }
   return [];
+}
+
+Future<List<Map>> fetchDailyForecast(
+    double longtitude, double latitude) async {
+  List<Map> dailyWeather = [];
+
+  final queryParams = {
+    'latitude': latitude.toString(),
+    'longitude': longtitude.toString(),
+    'timezone': 'auto',
+    'daily':
+        'weather_code,temperature_2m_max,temperature_2m_min,daylight_duration,precipitation_sum',
+  };
+  final httpsUri = Uri.https('api.open-meteo.com', '/v1/forecast', queryParams);
+
+  final response = await http.get(httpsUri);
+  if (response.statusCode == 200) {
+    var jsonResult = jsonDecode(response.body)['daily'];
+
+    for (var i = 0; i < jsonResult['time'].length; i++) {
+      var day = convertDayNumToText(DateTime.parse(jsonResult['time'][i]).weekday.toString());
+
+      var data = {
+        'weekDay': day,
+        'temperatureMax': jsonResult['temperature_2m_max'][i],
+        'temperatureMin': jsonResult['temperature_2m_min'][i],
+        'daylightDuration': jsonResult['daylight_duration'][i],
+        'precipitationSum': jsonResult['precipitation_sum'][i],
+      };
+
+      dailyWeather.add(data);
+    }
+
+    return dailyWeather;
+  }
+  return [];
+}
+
+String convertDayNumToText(String day) {
+  switch (day) {
+    case '1':
+      return 'Monday';
+    case '2':
+      return 'Tuesday';
+    case '3':
+      return 'Wednesday';
+    case '4':
+      return 'Thursday';
+    case '5':
+      return 'Friday';
+    case '6':
+      return 'Saturday';
+    case '7':
+      return 'Sunday';
+    default:
+      return 'Unknown';
+  }
 }

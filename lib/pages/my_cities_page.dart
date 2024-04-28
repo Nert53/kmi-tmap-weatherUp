@@ -1,4 +1,7 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
+import 'package:weather/constants.dart';
 import 'package:weather/data/city_database.dart';
 import 'package:weather/dataApi/external_api.dart';
 import 'package:weather/model/city.dart';
@@ -14,6 +17,7 @@ class _MyCitiesPageState extends State<MyCitiesPage> {
   late List<City> cities;
   late List<Map<dynamic, dynamic>> weatherInCities;
   bool isLoading = false;
+  Random random = Random();
 
   @override
   void initState() {
@@ -81,6 +85,9 @@ class _MyCitiesPageState extends State<MyCitiesPage> {
             ),
             child: ListTile(
                 title: Text('${city.name} (${city.country})'),
+                titleTextStyle: TextStyle(
+                    color: Theme.of(context).colorScheme.primary,
+                    fontWeight: FontWeight.bold),
                 trailing: Row(
                     mainAxisSize: MainAxisSize.min,
                     mainAxisAlignment: MainAxisAlignment.spaceAround,
@@ -92,8 +99,9 @@ class _MyCitiesPageState extends State<MyCitiesPage> {
                       ),
                       const SizedBox(width: 8),
                       Icon(
-                        Icons.cloud_queue_outlined,
-                        color: Theme.of(context).colorScheme.secondary,
+                        WEATHER_ICONS[random.nextInt(3)],
+                        color: Theme.of(context).colorScheme.primary,
+                        size: 20,
                       )
                     ])),
           ),

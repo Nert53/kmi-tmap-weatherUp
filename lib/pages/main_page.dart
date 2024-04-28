@@ -85,6 +85,7 @@ class _FirstPageState extends State<FirstPage> {
       bottomNavigationBar: NavigationBar(
         selectedIndex: _selectedIndex,
         onDestinationSelected: _navigateToPage,
+        height: 70,
         destinations: const [
           NavigationDestination(
             icon: Icon(Icons.home_outlined),
