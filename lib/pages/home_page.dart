@@ -2,7 +2,8 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:weather/dataApi/test_api.dart';
+import 'package:location/location.dart';
+import 'package:weather/dataApi/external_api.dart';
 import 'package:weather/model/current_weather.dart';
 import 'package:weather/ui/colors.dart';
 import 'package:step_progress_indicator/step_progress_indicator.dart';
@@ -19,6 +20,7 @@ class _HomePageState extends State<HomePage> {
   final TextEditingController _searchController = TextEditingController();
 
   CurrentWeather? _currentWeather = CurrentWeather(
+      city: '',
       temperature: 0,
       temperatureMax: 0,
       temperatureMin: 0,
@@ -33,13 +35,45 @@ class _HomePageState extends State<HomePage> {
           DateTime.now().day, 18, 30));
 
   void _searchCityWeather() async {
-    final (longtitude, latitude) =
+    final (longtitude, latitude, city, country) =
         await fetchCityCoordinates(_searchController.text);
     CurrentWeather weather =
         await fetchCurrentCityWeather(longtitude, latitude);
 
     setState(() {
       _currentWeather = weather;
+      _searchController.text = city;
+    });
+  }
+
+  void _searchCurrentCityWeather() async {
+    Location location = Location();
+    bool serviceEnabled;
+    PermissionStatus permissionGranted;
+
+    serviceEnabled = await location.serviceEnabled();
+    if (!serviceEnabled) {
+      serviceEnabled = await location.requestService();
+      if (!serviceEnabled) {
+        return;
+      }
+    }
+
+    permissionGranted = await location.hasPermission();
+    if (permissionGranted == PermissionStatus.denied) {
+      permissionGranted = await location.requestPermission();
+      if (permissionGranted != PermissionStatus.granted) {
+        return;
+      }
+    }
+
+    var locationData = await location.getLocation();
+    CurrentWeather weather =
+        await fetchCurrentCityWeather(locationData.longitude!, locationData.latitude!);
+
+    setState(() {
+      _currentWeather = weather;
+      _searchController.text = weather.city;
     });
   }
 
@@ -50,26 +84,42 @@ class _HomePageState extends State<HomePage> {
     return ListView(
       padding: const EdgeInsets.all(16.0),
       children: [
-        Material(
-          elevation: 3.0,
-          borderRadius: const BorderRadius.all(Radius.circular(16.0)),
-          child: TextField(
-            controller: _searchController,
-            onSubmitted: (_) => _searchCityWeather(),
-            decoration: const InputDecoration(
-              fillColor: Colors.white,
-              filled: true,
-              hintText: 'Search for a city',
-              suffixIcon: Icon(Icons.search),
-              isDense: true,
-              border: OutlineInputBorder(
-                  borderSide: BorderSide.none,
-                  borderRadius: BorderRadius.all(Radius.circular(16.0))),
-              enabledBorder: OutlineInputBorder(
-                  borderSide: BorderSide.none,
-                  borderRadius: BorderRadius.all(Radius.circular(16.0))),
+        Row(
+          children: [
+            Expanded(
+              child: Material(
+                elevation: 3.0,
+                borderRadius: const BorderRadius.all(Radius.circular(16.0)),
+                child: TextField(
+                  controller: _searchController,
+                  onSubmitted: (_) => _searchCityWeather(),
+                  decoration: const InputDecoration(
+                    fillColor: Colors.white,
+                    filled: true,
+                    hintText: 'Search for a city',
+                    suffixIcon: Icon(Icons.search_outlined),
+                    isDense: true,
+                    border: OutlineInputBorder(
+                        borderSide: BorderSide.none,
+                        borderRadius: BorderRadius.all(Radius.circular(16.0))),
+                    enabledBorder: OutlineInputBorder(
+                        borderSide: BorderSide.none,
+                        borderRadius: BorderRadius.all(Radius.circular(16.0))),
+                  ),
+                ),
+              ),
             ),
-          ),
+            const SizedBox(width: 12.0),
+            FloatingActionButton(
+              onPressed: () {
+                _searchCurrentCityWeather();
+              },
+              foregroundColor: Theme.of(context).colorScheme.onPrimary,
+              backgroundColor: Theme.of(context).colorScheme.primary,
+              elevation: 4.0,
+              child: const Icon(Icons.gps_fixed_outlined),
+            )
+          ],
         ),
         const SizedBox(height: 12.0),
         Container(
@@ -109,7 +159,7 @@ class _HomePageState extends State<HomePage> {
                 ],
               ),
               child: smallContainerWdigetDecimal(
-                  'Rain [mm]', _currentWeather!.rain, 10),
+                  'Rain [mm]', _currentWeather!.rain, 5),
             ),
           ),
           const SizedBox(width: 12.0),
@@ -224,7 +274,7 @@ class _HomePageState extends State<HomePage> {
   }
 
   smallContainerWidgetWhole(String title, int value, int totalValue) {
-    var selectedColor;
+    Color selectedColor;
     if (totalValue == 11) {
       selectedColor = uvIndexColor(value);
     } else {
@@ -293,7 +343,7 @@ class _HomePageState extends State<HomePage> {
           ],
         ),
         Icon(
-          Icons.sunny,
+          Icons.wb_sunny_outlined,
           size: 64.0,
           color: Theme.of(context).colorScheme.primary,
         ),
@@ -302,6 +352,10 @@ class _HomePageState extends State<HomePage> {
   }
 
   roundValueIndicator(double value, double totalValue) {
+    if (value < 1) {
+      value = value * 10;
+      totalValue = totalValue * 10;
+    }
     return CircularStepProgressIndicator(
       totalSteps: totalValue.round(),
       roundedCap: (_, __) => true,
@@ -336,6 +390,10 @@ class _HomePageState extends State<HomePage> {
     DateTime currentTime = DateTime.now();
     Duration daylightDurationMinutes = sunset.difference(sunrise);
     Duration timePastSunriseMinutes = currentTime.difference(sunrise);
+    if (timePastSunriseMinutes > daylightDurationMinutes) {
+      timePastSunriseMinutes =
+          daylightDurationMinutes - const Duration(minutes: 2);
+    }
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,

@@ -74,7 +74,7 @@ class CityDatabase {
     return false;
   }
 
-  Future<City> getCity(int id) async {
+  Future<City> getCity(String id) async {
     final db = await instance.db;
 
     final maps = await db.query(
@@ -97,7 +97,7 @@ class CityDatabase {
     return result.map((json) => City.fromJson(json)).toList();
   }
 
-  Future<int> deleteCity(int id) async {
+  Future<int> deleteCity(String id) async {
     final db = await instance.db;
 
     return await db.delete(

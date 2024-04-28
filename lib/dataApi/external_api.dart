@@ -2,19 +2,11 @@ import 'dart:convert';
 import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
 import 'package:weather/dataApi/api_keys.dart';
+import 'package:weather/model/city.dart';
 import 'package:weather/model/current_weather.dart';
 
-Future<int> fetchCityCode(String city) async {
-  var apiUrl =
-      'http://dataservice.accuweather.com/locations/v1/cities/autocomplete?apikey=$accuWeatrherApiKey&q=$city';
-  var result = await http.get(Uri.parse(apiUrl));
-  var jsonResult = jsonDecode(result.body)[0]; // takes first (closest) result
-  int cityCode = int.parse(jsonResult['Key']);
-
-  return cityCode;
-}
-
-Future<(double, double)> fetchCityCoordinates(String city) async {
+Future<(double, double, String, String)> fetchCityCoordinates(
+    String city) async {
   String editedCity = city.trim();
   int countOfCities = 1;
   var apiUrl =
@@ -22,13 +14,37 @@ Future<(double, double)> fetchCityCoordinates(String city) async {
   var result = await http.get(Uri.parse(apiUrl));
 
   if (result.statusCode != 200) {
-    return (0.0, 0.0);
+    return (0.0, 0.0, '', '');
   }
   var jsonResult = jsonDecode(result.body)["results"][0];
 
   double cityLongitude = jsonResult['longitude'];
   double cityLatitude = jsonResult['latitude'];
-  return (cityLongitude, cityLatitude);
+  String cityName = jsonResult['name'];
+  String country = jsonResult['country_code'];
+  return (cityLongitude, cityLatitude, cityName, country);
+}
+
+Future<(String, String, String)> fetchCityOfCoordinates(
+    double longtitude, double latitude) async {
+  final queryParams = {
+    'lat': latitude.toString(),
+    'lon': longtitude.toString(),
+    'api_key': geocodeMapsApiKey,
+  };
+  final httpsUri = Uri.https('geocode.maps.co', '/reverse', queryParams);
+
+  final response = await http.get(httpsUri);
+  if (response.statusCode != 200) {
+    return ('', '', '');
+  }
+
+  var jsonResult = jsonDecode(response.body);
+  return (
+    jsonResult['address']['city'].toString(),
+    jsonResult['address']['county'].toString(),
+    jsonResult['address']['country_code'].toString()
+  );
 }
 
 Future<String> fetchCountryOfCity(String city) async {
@@ -55,6 +71,7 @@ Future<CurrentWeather> fetchCurrentCityWeather(
   var result = await http.get(Uri.parse(apiUrl));
   if (result.statusCode != 200) {
     return CurrentWeather(
+        city: '',
         temperature: 0,
         temperatureMax: 0,
         temperatureMin: 0,
@@ -68,12 +85,13 @@ Future<CurrentWeather> fetchCurrentCityWeather(
   }
   var jsonResult = jsonDecode(result.body);
 
-  var weatherCode = jsonResult['current']['weather_code'];
-  var weatherText = await convertWeatherCodeToText(weatherCode);
-
+  var weatherText =
+      await convertWeatherCodeToText(jsonResult['current']['weather_code']);
   var airQualityIndex = await fetchCityAirQualityIndex(longtitude, latitude);
+  var (cityName, county, countyCode) = await fetchCityOfCoordinates(longtitude, latitude);
 
   return CurrentWeather(
+      city: cityName,
       temperature: jsonResult['current']['temperature_2m'],
       temperatureMax: jsonResult['daily']['temperature_2m_max'][0],
       temperatureMin: jsonResult['daily']['temperature_2m_min'][0],
@@ -104,4 +122,44 @@ Future<String> convertWeatherCodeToText(int weatherCdde) async {
   var text = jsonResult[weatherCdde.toString()]['day']['description'];
 
   return text;
+}
+
+Future<List<Map>> fetchMultipleCitiesWeather(List<City> cities) async {
+  List<Map> citiesWeather = [];
+  String citiesLatitude = '';
+  String citiesLongitude = '';
+
+  for (var city in cities) {
+    citiesLatitude += '${city.latitude},';
+    citiesLongitude += '${city.longitude},';
+  }
+
+  final queryParams = {
+    'latitude': citiesLatitude,
+    'longitude': citiesLongitude,
+    'current':
+        "temperature_2m,apparent_temperature,precipitation,rain,weather_code",
+    'daily': 'uv_index_max',
+    'timezone': 'auto',
+  };
+  final httpsUri = Uri.https('api.open-meteo.com', '/v1/forecast', queryParams);
+
+  final response = await http.get(httpsUri);
+  if (response.statusCode == 200) {
+    var jsonResult = jsonDecode(response.body);
+
+    for (var cityWeather in jsonResult) {
+      var data = {
+        'temperature': cityWeather['current']['temperature_2m'],
+        'apparentTemperature': cityWeather['current']['apparent_temperature'],
+        'weatherCode':
+            convertWeatherCodeToText(cityWeather['current']['weather_code']),
+      };
+
+      citiesWeather.add(data);
+    }
+
+    return citiesWeather;
+  }
+  return [];
 }

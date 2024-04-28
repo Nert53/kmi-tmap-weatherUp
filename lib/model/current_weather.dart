@@ -1,4 +1,5 @@
 class CurrentWeather {
+  final String city;
   final double temperature;
   final double temperatureMax;
   final double temperatureMin;
@@ -11,6 +12,7 @@ class CurrentWeather {
   final DateTime sunset;
 
   CurrentWeather({
+    required this.city,
     required this.temperature,
     required this.temperatureMax,
     required this.temperatureMin,
