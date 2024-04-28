@@ -1,3 +1,3 @@
-# weather
+# WeatherUP
 
-A new Flutter project.
+Final task for course KMI/TMAP on Palacky University.
