@@ -88,7 +88,7 @@ Future<CurrentWeather> fetchCurrentCityWeather(
   var weatherText =
       await convertWeatherCodeToText(jsonResult['current']['weather_code']);
   var airQualityIndex = await fetchCityAirQualityIndex(longtitude, latitude);
-  var (cityName, county, countyCode) =
+  var (cityName, _, _) =
       await fetchCityOfCoordinates(longtitude, latitude);
 
   return CurrentWeather(

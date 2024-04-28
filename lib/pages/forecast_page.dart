@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:weather/dataApi/external_api.dart';
-import 'package:weather/model/current_weather.dart';
 
 class ForecastPage extends StatefulWidget {
   const ForecastPage({super.key});

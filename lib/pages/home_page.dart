@@ -1,9 +1,7 @@
 // ignore_for_file: deprecated_member_use
 
 import 'dart:math';
-
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:location/location.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:weather/constants.dart';
@@ -75,7 +73,7 @@ class _HomePageState extends State<HomePage> {
   }
 
   void _searchCityWeather() async {
-    final (longtitude, latitude, city, country) =
+    final (longtitude, latitude, city, _) =
         await fetchCityCoordinates(_searchController.text);
     CurrentWeather weather =
         await fetchCurrentCityWeather(longtitude, latitude);
@@ -182,10 +180,10 @@ class _HomePageState extends State<HomePage> {
               ],
             ),
             child: mainContainerWidget(
-                _currentWeather!.temperature.toString(),
-                _currentWeather!.weatherText,
-                _currentWeather!.temperatureMax.toString(),
-                _currentWeather!.temperatureMin.toString())),
+                _currentWeather.temperature.toString(),
+                _currentWeather.weatherText,
+                _currentWeather.temperatureMax.toString(),
+                _currentWeather.temperatureMin.toString())),
         const SizedBox(height: 12.0),
         Row(mainAxisAlignment: MainAxisAlignment.spaceAround, children: [
           Expanded(
@@ -204,7 +202,7 @@ class _HomePageState extends State<HomePage> {
                 ],
               ),
               child: smallContainerWdigetDecimal(
-                  'Rain [mm]', _currentWeather!.rain, 5),
+                  'Rain [mm]', _currentWeather.rain, 5),
             ),
           ),
           const SizedBox(width: 12.0),
@@ -224,7 +222,7 @@ class _HomePageState extends State<HomePage> {
                 ],
               ),
               child: smallContainerWidgetWhole(
-                  'UV index [0-11]', _currentWeather!.uvIndex.round(), 11),
+                  'UV index [0-11]', _currentWeather.uvIndex.round(), 11),
             ),
           ),
         ]),
@@ -248,7 +246,7 @@ class _HomePageState extends State<HomePage> {
                   ],
                 ),
                 child: smallContainerWidgetWhole('Air Quality [0-100]',
-                    _currentWeather!.airQualityIndex, 100),
+                    _currentWeather.airQualityIndex, 100),
               ),
             ),
             const SizedBox(width: 12.0),
@@ -268,14 +266,14 @@ class _HomePageState extends State<HomePage> {
                     ],
                   ),
                   child: smallContainerWdigetDecimal(
-                      'Pressure [hPa]', _currentWeather!.pressure, 1300)),
+                      'Pressure [hPa]', _currentWeather.pressure, 1300)),
             ),
           ],
         ),
         const SizedBox(height: 12.0),
         Container(
           height: 200,
-          padding: EdgeInsets.all(16.0),
+          padding: const EdgeInsets.all(16.0),
           decoration: const BoxDecoration(
             color: containerBackground,
             borderRadius: BorderRadius.all(Radius.circular(16.0)),
@@ -288,7 +286,7 @@ class _HomePageState extends State<HomePage> {
             ],
           ),
           child: sunsetSunriseWidget(
-              _currentWeather!.sunrise, _currentWeather!.sunset),
+              _currentWeather.sunrise, _currentWeather.sunset),
         ),
       ],
     );
