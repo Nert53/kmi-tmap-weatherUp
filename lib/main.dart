@@ -16,7 +16,7 @@ class MainApp extends StatelessWidget {
         useMaterial3: true,
         scaffoldBackgroundColor: const Color.fromARGB(255, 240, 240, 240),
         colorScheme: ColorScheme.fromSeed(
-          seedColor: const Color(0x00006fad),
+          seedColor: const Color(0x00006fad), // color of UPOL
           brightness: Brightness.light,
         ),
       ),

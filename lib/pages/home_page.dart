@@ -26,7 +26,7 @@ class _HomePageState extends State<HomePage> {
       temperature: 0,
       temperatureMax: 0,
       temperatureMin: 0,
-      weatherText: "none",
+      weatherText: 'none',
       rain: 0,
       uvIndex: 1,
       airQualityIndex: 1,
@@ -95,18 +95,24 @@ class _HomePageState extends State<HomePage> {
     bool serviceEnabled;
     PermissionStatus permissionGranted;
 
+    // Check if location services are enabled
     serviceEnabled = await location.serviceEnabled();
     if (!serviceEnabled) {
       serviceEnabled = await location.requestService();
       if (!serviceEnabled) {
+        displayWarningSnackBar(context,
+            'Location services are disabled. Please turn on GPS in settings.');
         return;
       }
     }
 
+    // Check if location permissions are granted to this app
     permissionGranted = await location.hasPermission();
     if (permissionGranted == PermissionStatus.denied) {
       permissionGranted = await location.requestPermission();
       if (permissionGranted != PermissionStatus.granted) {
+        displayWarningSnackBar(context,
+            'You need to enable location permissions to use this feature.');
         return;
       }
     }
@@ -312,7 +318,7 @@ class _HomePageState extends State<HomePage> {
           ),
         ],
       ),
-      roundValueIndicator(value, totalValue),
+      roundValueIndicator(value, totalValue)
     ]);
   }
 
@@ -349,6 +355,8 @@ class _HomePageState extends State<HomePage> {
 
   mainContainerWidget(
       String currentTemp, String weatherText, String highTemp, String lowTemp) {
+    String weatherIcon = convertWeatherTextToIcon(weatherText);
+
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
@@ -386,7 +394,7 @@ class _HomePageState extends State<HomePage> {
           ],
         ),
         Icon(
-          WEATHER_ICONS[random.nextInt(WEATHER_ICONS.length)],
+          WEATHER_ICONS[weatherIcon],
           size: 64.0,
           color: Theme.of(context).colorScheme.primary,
         ),
@@ -399,34 +407,44 @@ class _HomePageState extends State<HomePage> {
       value = value * 10;
       totalValue = totalValue * 10;
     }
-    return CircularStepProgressIndicator(
-      totalSteps: totalValue.round(),
-      roundedCap: (_, __) => true,
-      currentStep: value.round(),
-      stepSize: 8,
-      selectedStepSize: 8,
-      selectedColor: Theme.of(context).colorScheme.primary,
-      unselectedColor: Colors.grey[200],
-      padding: 0,
-      width: 60,
-      height: 60,
+    return Expanded(
+      flex: 1,
+      child: AspectRatio(
+        aspectRatio: 1,
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 60.0, maxHeight: 60.0),
+          child: CircularStepProgressIndicator(
+            totalSteps: totalValue.round(),
+            roundedCap: (_, __) => true,
+            currentStep: value.round(),
+            stepSize: 8,
+            selectedStepSize: 8,
+            selectedColor: Theme.of(context).colorScheme.primary,
+            unselectedColor: Colors.grey[200],
+            padding: 0,
+            width: double.infinity,
+            height: double.infinity,
+          ),
+        ),
+      ),
     );
   }
 
   straightValueIndicator(int value, int totalValue, Color selectedColor) {
     return Transform.flip(
-        flipY: true,
-        child: StepProgressIndicator(
-          totalSteps: totalValue,
-          currentStep: value,
-          size: 20,
-          selectedSize: 20,
-          selectedColor: selectedColor,
-          roundedEdges: const Radius.circular(10),
-          unselectedColor: Colors.grey[200]!,
-          padding: 0,
-          direction: Axis.vertical,
-        ));
+      flipY: true,
+      child: StepProgressIndicator(
+        totalSteps: totalValue,
+        currentStep: value,
+        size: 20,
+        selectedSize: 20,
+        selectedColor: selectedColor,
+        roundedEdges: const Radius.circular(10),
+        unselectedColor: Colors.grey[200]!,
+        padding: 0,
+        direction: Axis.vertical,
+      ),
+    );
   }
 
   sunsetSunriseWidget(DateTime sunrise, DateTime sunset) {
@@ -485,6 +503,19 @@ class _HomePageState extends State<HomePage> {
         )
       ],
     );
+  }
+
+  void displayWarningSnackBar(BuildContext context, String s) {
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      content: Text(s,
+          style:
+              TextStyle(fontWeight: FontWeight.bold, color: Colors.red[700])),
+      backgroundColor: Colors.red[100],
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.0)),
+      margin: const EdgeInsets.all(8.0),
+      behavior: SnackBarBehavior.floating,
+      duration: const Duration(seconds: 5),
+    ));
   }
 }
 

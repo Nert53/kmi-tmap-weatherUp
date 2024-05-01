@@ -90,12 +90,12 @@ class _FirstPageState extends State<FirstPage> {
           NavigationDestination(
             icon: Icon(Icons.home_outlined),
             selectedIcon: Icon(Icons.home),
-            label: 'Home',
+            label: 'Overview',
           ),
           NavigationDestination(
             icon: Icon(Icons.area_chart_outlined),
             selectedIcon: Icon(Icons.area_chart),
-            label: 'Forecast',
+            label: 'Daily Forecast',
           ),
           NavigationDestination(
             icon: Icon(Icons.location_city_outlined),
@@ -129,6 +129,7 @@ class _FirstPageState extends State<FirstPage> {
                     addCity(chooseCityController.text);
                     chooseCityController.clear();
                     Navigator.of(context).pop();
+                    setState(() {});
                   },
                   child: const Text('Add'))
             ],
@@ -150,19 +151,34 @@ class _FirstPageState extends State<FirstPage> {
 
   buildWarningContainer(String message) {
     return Center(
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(10),
-          border: Border.all(color: Colors.orange[800]!, width: 3),
-        ),
-        child: Text(
-          message,
-          style: TextStyle(
-              color: Colors.orange[800]!,
-              fontSize: 16,
-              fontWeight: FontWeight.w500),
-        ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: Colors.red[700]!, width: 2),
+              color: Colors.red[100],
+            ),
+            child: Text(
+              message,
+              style: TextStyle(
+                  color: Colors.red[700]!,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w500),
+            ),
+          ),
+          const SizedBox(height: 16),
+          ElevatedButton(
+            child: const Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [Text("Refresh"), Icon(Icons.refresh_outlined)]),
+            onPressed: () {
+              _checkInternetConnection();
+            },
+          ),
+        ],
       ),
     );
   }

@@ -69,6 +69,7 @@ class _MyCitiesPageState extends State<MyCitiesPage> {
           ),
           child: Dismissible(
             key: Key(city.id),
+            direction: DismissDirection.endToStart,
             onDismissed: (direction) async {
               await CityDatabase.instance.deleteCity(city.id);
             },
@@ -99,7 +100,7 @@ class _MyCitiesPageState extends State<MyCitiesPage> {
                       ),
                       const SizedBox(width: 8),
                       Icon(
-                        WEATHER_ICONS[random.nextInt(3)],
+                        WEATHER_ICONS[convertWeatherTextToIcon(weatherInCities[index]['weatherText'].toString())],
                         color: Theme.of(context).colorScheme.primary,
                         size: 20,
                       )

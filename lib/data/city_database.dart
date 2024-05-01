@@ -39,6 +39,7 @@ class CityDatabase {
         )
       ''');
 
+    // example data
     addCity(City(
         id: ShortUid.create(),
         name: 'London',

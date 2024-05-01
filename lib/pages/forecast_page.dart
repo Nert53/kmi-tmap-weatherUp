@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:weather/constants.dart';
 import 'package:weather/dataApi/external_api.dart';
 
 class ForecastPage extends StatefulWidget {
@@ -42,7 +43,7 @@ class _ForecastPageState extends State<ForecastPage> {
         child: isLoading
             ? const CircularProgressIndicator()
             : forecast.isEmpty
-                ? const Text('No city selected. Please select a city.')
+                ? const Text('No city selected. Please select a city on overview page.')
                 : buildForecast());
   }
 
@@ -69,7 +70,15 @@ class _ForecastPageState extends State<ForecastPage> {
               fontSize: 16,
               color: Theme.of(context).primaryColor,
             ),
-            trailing: Text('${day['temperatureMax']}°C / ${day['temperatureMin']} °C, ${day['precipitationSum']} mm'),
+            trailing: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (day['precipitationSum'] > 0) Icon(WEATHER_ICONS['rainy'], color: Colors.blue[800]),
+                if (day['temperatureMax'] > 26) Icon(WEATHER_ICONS['hot'], color: Colors.red[700]),
+                const SizedBox(width: 24),
+                Text('${day['temperatureMax']} °C / ${day['temperatureMin']} °C'),
+              ],
+            ),
           ),
         );
       }).toList(),
